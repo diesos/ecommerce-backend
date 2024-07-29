@@ -4,6 +4,7 @@ import com.Side.Project.ecommerce_backend.api.models.RegistrationBody;
 import com.Side.Project.ecommerce_backend.exception.UserAlreadyExist;
 import com.Side.Project.ecommerce_backend.models.LocalUser;
 import com.Side.Project.ecommerce_backend.models.dao.LocalUserDAO;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,7 +18,7 @@ public class UserService {
 
     public LocalUser registerUser(RegistrationBody registrationBody) throws UserAlreadyExist {
         if (localUserDAO.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
-                && localUserDAO.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent())
+                || localUserDAO.findByUsernameIgnoreCase(registrationBody.getUsername()).isPresent())
         {
             throw new UserAlreadyExist();
         }

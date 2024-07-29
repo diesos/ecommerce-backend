@@ -1,12 +1,13 @@
 package com.Side.Project.ecommerce_backend.controller.auth;
 
 import com.Side.Project.ecommerce_backend.api.models.RegistrationBody;
+import com.Side.Project.ecommerce_backend.exception.UserAlreadyExist;
 import com.Side.Project.ecommerce_backend.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -20,7 +21,12 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public void registerUser(@RequestBody RegistrationBody registrationBody){
-        userService.registerUser(registrationBody);
+    public ResponseEntity registerUser(@Valid @RequestBody RegistrationBody registrationBody) {
+        try {
+            userService.registerUser(registrationBody);
+            return ResponseEntity.ok().build();
+        } catch (UserAlreadyExist e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 }
