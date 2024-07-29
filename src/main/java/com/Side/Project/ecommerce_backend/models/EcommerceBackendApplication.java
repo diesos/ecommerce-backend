@@ -1,4 +1,4 @@
-package com.Side.Project.ecommerce_backend;
+package com.Side.Project.ecommerce_backend.models;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
