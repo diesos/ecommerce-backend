@@ -4,10 +4,13 @@ import com.Side.Project.ecommerce_backend.api.models.LoginBody;
 import com.Side.Project.ecommerce_backend.api.models.LoginResponse;
 import com.Side.Project.ecommerce_backend.api.models.RegistrationBody;
 import com.Side.Project.ecommerce_backend.exception.UserAlreadyExist;
+import com.Side.Project.ecommerce_backend.models.LocalUser;
 import com.Side.Project.ecommerce_backend.service.UserService;
 import jakarta.validation.Valid;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -43,5 +46,10 @@ public class AuthenticationController {
         }
 
 
+    }
+
+    @GetMapping("/me")
+    public LocalUser getLoggedInUser(@AuthenticationPrincipal LocalUser user){
+        return user;
     }
 }
