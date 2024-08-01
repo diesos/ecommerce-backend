@@ -1,5 +1,6 @@
 package com.Side.Project.ecommerce_backend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,6 +26,7 @@ public class Adress {
     @Column(name = "zip_code", nullable = false)
     private String zip_code;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private LocalUser user;

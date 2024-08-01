@@ -1,4 +1,4 @@
-package com.Side.Project.ecommerce_backend.api.auth;
+package com.Side.Project.ecommerce_backend.controller.auth;
 
 import com.Side.Project.ecommerce_backend.api.models.LoginBody;
 import com.Side.Project.ecommerce_backend.api.models.LoginResponse;
