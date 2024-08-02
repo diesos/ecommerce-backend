@@ -34,7 +34,7 @@ public class AuthenticationController {
         } catch (UserAlreadyExist e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (EmailFailureException e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -43,8 +43,15 @@ public class AuthenticationController {
         String jwt =null;
         try {
             jwt = userService.loginUser(loginBody);
-        } catch (UserNotVerifiedException e) {
-            throw new RuntimeException(e);
+        } catch (UserNotVerifiedException exception) {
+            LoginResponse response = new LoginResponse();
+            response.setSuccces(false);
+            String reason = "USER_NOT_VERIFIED";
+            if (exception.isNewEmailSent()){
+                reason += "_EMAIL_RESENT";
+            }
+            response.setFailureReason(reason);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         } catch (EmailFailureException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -53,12 +60,23 @@ public class AuthenticationController {
         } else {
             LoginResponse response = new LoginResponse();
             response.setJwt(jwt);
+            response.setSuccces(true);
             return ResponseEntity.ok(response);
             }
     }
 
+
     @GetMapping("/me")
     public LocalUser getLoggedInUser(@AuthenticationPrincipal LocalUser user){
         return user;
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity verifyEmail(@RequestParam String token){
+        if (userService.verifyUser(token)) {
+            return ResponseEntity.ok().build();
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 }

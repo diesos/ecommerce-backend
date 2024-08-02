@@ -9,6 +9,7 @@ import com.Side.Project.ecommerce_backend.models.LocalUser;
 import com.Side.Project.ecommerce_backend.models.VerificationToken;
 import com.Side.Project.ecommerce_backend.models.dao.LocalUserDAO;
 import com.Side.Project.ecommerce_backend.models.dao.VerificationTokenDAO;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +27,6 @@ public class UserService {
     private JWTService jwtService;
     private EmailService emailService;
 
-    @Value("${email.verification.timeout}")
-    private Long timeout;
 
 
     public UserService(LocalUserDAO localUserDAO, VerificationTokenDAO verificationTokenDAO,
@@ -100,7 +99,7 @@ public class UserService {
                 {
                     List<VerificationToken> verificationTokens = user.getVerificationTokens();
                  boolean resend = verificationTokens.size() == 0 ||
-                         verificationTokens.get(0).getCreatedTimeStamp.before(new Timestamp(System.currentTimeMillis() - (timeout)));
+                         verificationTokens.get(0).getCreatedTimeStamp.before(new Timestamp(System.currentTimeMillis() - (60*60*1000)));
                  if (resend) {
                      VerificationToken verificationToken = createVerificationToken(user);
                      verificationTokenDAO.save(verificationToken);
@@ -111,5 +110,22 @@ public class UserService {
             }
         }
      return null;
+    }
+
+    @Transactional
+    public boolean verifyUser(String token){
+    Optional<VerificationToken> opToken = verificationTokenDAO.findByToken(token);
+        if (opToken.isPresent())
+        {
+            VerificationToken verificationToken = opToken.get();
+            LocalUser user = verificationToken.getUser();
+            if (!user.isEmailVerified()){
+                user.setEmailVerified(true);
+                localUserDAO.save(user);
+                verificationTokenDAO.deleteByUser(user);
+                return true;
+            }
+        }
+        return false;
     }
 }
