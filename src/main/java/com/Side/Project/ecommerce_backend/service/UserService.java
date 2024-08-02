@@ -75,7 +75,7 @@ public class UserService {
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtService.generateVerificationJWT(user));
-        verificationToken.setCreatedTimeStamp(new Timestamp(System.currentTimeMillis()));
+        verificationToken.setCreatedTimestamp(new Timestamp(System.currentTimeMillis()));
         verificationToken.setUser(user);
         user.getVerificationTokens().add(verificationToken);
         return verificationToken;
@@ -99,7 +99,7 @@ public class UserService {
                 {
                     List<VerificationToken> verificationTokens = user.getVerificationTokens();
                  boolean resend = verificationTokens.size() == 0 ||
-                         verificationTokens.get(0).getCreatedTimeStamp.before(new Timestamp(System.currentTimeMillis() - (60*60*1000)));
+                         verificationTokens.get(0).getCreatedTimestamp().before(new Timestamp(System.currentTimeMillis() - (60*60*1000)));
                  if (resend) {
                      VerificationToken verificationToken = createVerificationToken(user);
                      verificationTokenDAO.save(verificationToken);
