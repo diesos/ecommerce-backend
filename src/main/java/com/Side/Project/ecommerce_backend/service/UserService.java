@@ -4,13 +4,16 @@ import com.Side.Project.ecommerce_backend.api.models.LoginBody;
 import com.Side.Project.ecommerce_backend.api.models.RegistrationBody;
 import com.Side.Project.ecommerce_backend.exception.EmailFailureException;
 import com.Side.Project.ecommerce_backend.exception.UserAlreadyExist;
+import com.Side.Project.ecommerce_backend.exception.UserNotVerifiedException;
 import com.Side.Project.ecommerce_backend.models.LocalUser;
 import com.Side.Project.ecommerce_backend.models.VerificationToken;
 import com.Side.Project.ecommerce_backend.models.dao.LocalUserDAO;
 import com.Side.Project.ecommerce_backend.models.dao.VerificationTokenDAO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -23,6 +26,9 @@ public class UserService {
     private JWTService jwtService;
     private EmailService emailService;
 
+    @Value("${email.verification.timeout}")
+    private Long timeout;
+
 
     public UserService(LocalUserDAO localUserDAO, VerificationTokenDAO verificationTokenDAO,
                        EncryptionService encryptionService, JWTService jwtService, EmailService emailService) {
@@ -32,6 +38,15 @@ public class UserService {
         this.jwtService = jwtService;
         this.emailService = emailService;
     }
+
+    /**
+     *
+     * @param registrationBody the registration request
+     * @return saving the user into db, after passing controllers if not throw errors
+     * @throws UserAlreadyExist if user is already registered
+     * @throws EmailFailureException if the email token is not validated
+     */
+
 
     public LocalUser registerUser(RegistrationBody registrationBody) throws UserAlreadyExist, EmailFailureException {
         if (localUserDAO.findByEmailIgnoreCase(registrationBody.getEmail()).isPresent()
@@ -51,6 +66,12 @@ public class UserService {
         return localUserDAO.save(user);
     }
 
+    /**
+     * Create a verification Token
+     * @param user request
+     * @return a token string
+     */
+
 
     private VerificationToken createVerificationToken(LocalUser user){
         VerificationToken verificationToken = new VerificationToken();
@@ -61,12 +82,32 @@ public class UserService {
         return verificationToken;
     }
 
-    public String loginUser(LoginBody loginBody){
+    /**
+     * Login a user provides an authentification token back.
+     * @param loginBody the login request
+     * @return the auth token.Nul if the request was invalid.
+     */
+
+    public String loginUser(LoginBody loginBody) throws UserNotVerifiedException, EmailFailureException {
         Optional<LocalUser> opUser = localUserDAO.findByUsernameIgnoreCase((loginBody.getUsername()));
         if (opUser.isPresent()){
             LocalUser user = opUser.get();
             if (encryptionService.VerifyPassword(loginBody.getPassword(), user.getPassword())) {
-                return jwtService.generateJWT(user);
+                if (user.isEmailVerified()) {
+                    return jwtService.generateJWT(user);
+                }
+                else
+                {
+                    List<VerificationToken> verificationTokens = user.getVerificationTokens();
+                 boolean resend = verificationTokens.size() == 0 ||
+                         verificationTokens.get(0).getCreatedTimeStamp.before(new Timestamp(System.currentTimeMillis() - (timeout)));
+                 if (resend) {
+                     VerificationToken verificationToken = createVerificationToken(user);
+                     verificationTokenDAO.save(verificationToken);
+                     emailService.sendVerificationEmail(verificationToken);
+                 }
+                 throw new UserNotVerifiedException(resend);
+                }
             }
         }
      return null;

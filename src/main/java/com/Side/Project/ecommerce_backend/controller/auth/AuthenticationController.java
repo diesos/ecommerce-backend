@@ -5,6 +5,7 @@ import com.Side.Project.ecommerce_backend.api.models.LoginResponse;
 import com.Side.Project.ecommerce_backend.api.models.RegistrationBody;
 import com.Side.Project.ecommerce_backend.exception.EmailFailureException;
 import com.Side.Project.ecommerce_backend.exception.UserAlreadyExist;
+import com.Side.Project.ecommerce_backend.exception.UserNotVerifiedException;
 import com.Side.Project.ecommerce_backend.models.LocalUser;
 import com.Side.Project.ecommerce_backend.service.UserService;
 import jakarta.validation.Valid;
@@ -38,17 +39,22 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity loginUser(@Valid @RequestBody LoginBody loginBody){
-        String jwt = userService.loginUser(loginBody);
-        if (jwt == null){
+    public ResponseEntity loginUser(@Valid @RequestBody LoginBody loginBody) throws UserNotVerifiedException, EmailFailureException {
+        String jwt =null;
+        try {
+            jwt = userService.loginUser(loginBody);
+        } catch (UserNotVerifiedException e) {
+            throw new RuntimeException(e);
+        } catch (EmailFailureException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        if (jwt == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } else {
             LoginResponse response = new LoginResponse();
             response.setJwt(jwt);
             return ResponseEntity.ok(response);
-        }
-
-
+            }
     }
 
     @GetMapping("/me")
