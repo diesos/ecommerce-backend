@@ -41,7 +41,7 @@ public class UserService {
     /**
      *
      * @param registrationBody the registration request
-     * @return saving the user into db, after passing controllers if not throw errors
+     * @return Registering a new User and generating a token for verify, after passing controllers if not throw errors
      * @throws UserAlreadyExist if user is already registered
      * @throws EmailFailureException if the email token is not validated
      */
@@ -59,10 +59,11 @@ public class UserService {
         user.setEmail(registrationBody.getEmail());
         user.setFirstName(registrationBody.getFirstName());
         user.setLastName(registrationBody.getLastName());
-        VerificationToken verificationToken = createVerificationToken(user);
+        LocalUser savedUser = localUserDAO.save(user);
+        VerificationToken verificationToken = createVerificationToken(savedUser);
         emailService.sendVerificationEmail(verificationToken);
         verificationTokenDAO.save(verificationToken);
-        return localUserDAO.save(user);
+        return savedUser;
     }
 
     /**
@@ -98,8 +99,8 @@ public class UserService {
                 else
                 {
                     List<VerificationToken> verificationTokens = user.getVerificationTokens();
-                 boolean resend = verificationTokens.size() == 0 ||
-                         verificationTokens.get(0).getCreatedTimestamp().before(new Timestamp(System.currentTimeMillis() - (60*60*1000)));
+                    boolean resend = verificationTokens.size() == 0 ||
+                         verificationTokens.get(0).getCreatedTimestamp().before(new Timestamp(System.currentTimeMillis() - (60 * 60 * 1000)));
                  if (resend) {
                      VerificationToken verificationToken = createVerificationToken(user);
                      verificationTokenDAO.save(verificationToken);

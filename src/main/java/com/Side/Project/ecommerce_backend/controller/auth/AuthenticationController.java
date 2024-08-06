@@ -43,11 +43,11 @@ public class AuthenticationController {
         String jwt =null;
         try {
             jwt = userService.loginUser(loginBody);
-        } catch (UserNotVerifiedException exception) {
+        } catch (UserNotVerifiedException e) {
             LoginResponse response = new LoginResponse();
             response.setSuccces(false);
             String reason = "USER_NOT_VERIFIED";
-            if (exception.isNewEmailSent()){
+            if (e.isNewEmailSent()){
                 reason += "_EMAIL_RESENT";
             }
             response.setFailureReason(reason);
@@ -80,3 +80,4 @@ public class AuthenticationController {
         }
     }
 }
+

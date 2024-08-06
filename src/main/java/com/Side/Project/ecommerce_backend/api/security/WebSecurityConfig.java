@@ -33,6 +33,7 @@ public class WebSecurityConfig {
                 .requestMatchers("/product").permitAll()
                 .requestMatchers("/auth/register").permitAll()
                 .requestMatchers("/auth/login").permitAll()
+                .requestMatchers("/auth/verify").permitAll()
                 //Else, every others routes need to be authenticated.
                 .anyRequest().authenticated();
         return http.build();
